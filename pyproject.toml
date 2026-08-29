@@ -4,7 +4,22 @@ version = "0.1.0"
 description = "Minimal runnable project scaffold"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "librosa>=1.0.0",
+    "soundfile>=0.14.0",
+    "scipy>=1.18.0",
+    "numpy>=2.5.0",
+    "matplotlib>=3.11.0",
+    "pandas>=3.0.0",
+    "scikit-learn>=1.9.0",
+    "pydub>=0.25.1",
+    "audioread>=3.1.0",
+    "noisereduce>=3.0.0",
+    "resampy>=0.4.3",
+    "pyAudioAnalysis>=0.3.14",
+    "torch>=2.2.0",
+    "torchaudio>=2.2.0",
+]
 
 [project.scripts]
 flipper = "main:main"
