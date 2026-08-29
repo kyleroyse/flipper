@@ -53,3 +53,41 @@ You should see:
 Flipper is running.
 Environment setup complete.
 ```
+
+## Layout
+
+Audio domain code stays under `flipper/core`, `flipper/models`, `flipper/services`, and `flipper/utils`. The agent only calls that code through `flipper/tools`.
+
+```text
+flipper/
+  core/ models/ services/ utils/
+  agents/     # loop, Message / ToolCall / ToolResult
+  tools/      # Tool protocol, registry, audio wrappers
+  memory/     # in-memory conversation store
+  prompts/    # system.md and optional skills
+main.py
+tests/
+```
+
+## Run the agent
+
+With the venv active:
+
+```bash
+python main.py --task "what formats do you support?"
+python main.py --task "process a silent clip"
+```
+
+Or after `pip install -e .`:
+
+```bash
+flipper --task "what formats do you support?"
+```
+
+`python main.py` with no arguments still prints the environment check.
+
+## Tests
+
+```bash
+python -m unittest discover -s tests
+```
