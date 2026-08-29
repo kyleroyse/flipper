@@ -1,7 +1,7 @@
 [project]
 name = "flipper"
 version = "0.1.0"
-description = "Minimal runnable project scaffold"
+description = "Audio research agent with LangGraph, Grok 4.6 primary, OpenAI backup"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -19,10 +19,19 @@ dependencies = [
     "pyAudioAnalysis>=0.3.14",
     "torch>=2.2.0",
     "torchaudio>=2.2.0",
+    "langgraph>=1.2.0",
+    "langgraph-checkpoint-sqlite>=2.0.0",
+    "xai-sdk>=1.0.0",
+    "openai>=1.0.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "typing-extensions>=4.0.0",
 ]
 
 [project.scripts]
 flipper = "main:main"
+flipper-session = "flipper.graphs.analysis_session:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["flipper"]

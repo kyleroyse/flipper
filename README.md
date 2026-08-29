@@ -65,6 +65,10 @@ flipper/
   tools/      # Tool protocol, registry, audio wrappers
   memory/     # in-memory conversation store
   prompts/    # system.md and optional skills
+  llm/        # Grok 4.6 primary, OpenAI backup, router
+  graphs/     # LangGraph extract → validate → approve → write
+  config.py state.py
+data/raw data/processed runs/
 main.py
 tests/
 ```
@@ -91,3 +95,32 @@ flipper --task "what formats do you support?"
 ```bash
 python -m unittest discover -s tests
 ```
+
+## LangGraph analysis session
+
+Grok 4.6 is the primary model. OpenAI ChatGPT runs only if Grok fails (timeout, 429, 5xx). Graph nodes never import `xai_sdk` or `openai` directly; they call `flipper.llm.router.complete`. Local Python validates units and writes the datasheet. You approve before any official row is written.
+
+```text
+notes  →  extract (router)  →  validate (local)  →  interrupt (you)
+                                                      ↓ approve
+                                                 write CSV
+```
+
+```bash
+cp .env.example .env   # fill XAI_API_KEY and OPENAI_API_KEY
+python -m flipper.graphs.analysis_session \
+  --notes data/raw/session_notes.txt \
+  --thread burst-2026-08-28
+```
+
+The graph pauses at the human gate. After you review the draft rows:
+
+```bash
+python -m flipper.graphs.analysis_session \
+  --thread burst-2026-08-28 \
+  --resume approve
+```
+
+Same `thread_id` reloads the sqlite checkpoint in `runs/`. The CSV in `data/processed/` records `model_used` so you know whether a row came from Grok or the OpenAI backup.
+
+Do not send WAV files to the model. Code measures; the model proposes labels and drafts text.

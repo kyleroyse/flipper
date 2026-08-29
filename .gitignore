@@ -159,3 +159,8 @@ cache/
 ._*
 .Spotlight-V100
 .Trashes
+
+# LangGraph / secrets / official rows
+.env
+runs/*.sqlite
+data/processed/*.csv

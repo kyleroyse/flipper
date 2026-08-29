@@ -47,6 +47,8 @@ def main() -> None:
     print("Environment setup complete.")
     print("Pass --task to run the agent, for example:")
     print('  python main.py --task "what formats do you support?"')
+    print("Analysis session (Grok 4.6, ChatGPT fallback):")
+    print("  python -m flipper.graphs.analysis_session --notes data/raw/session_notes.txt --thread burst-2026-08-28")
 
     logger.info("Flipper application started successfully")
 

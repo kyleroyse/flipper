@@ -1,0 +1,4 @@
+Session 2026-08-28 San Diego Bay, array 4.
+File SDBay_2026-08-12_ch3.wav — burst-pulse peak frequency 12.4 kHz, duration 180 ms.
+Rejected overlapping segment: boat noise + clicks, no measurement.
+File SDBay_2026-08-12_ch4.wav — signature whistle contour present, no peak SPL recorded.
