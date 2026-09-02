@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import pprint
 import re
 import sqlite3
 from pathlib import Path
@@ -13,9 +14,11 @@ from langgraph.graph import END, StateGraph
 from langgraph.types import Command, interrupt
 
 from flipper.config import settings
+from flipper.llm.grok import SUMMARY_SYSTEM
 from flipper.llm.router import complete
 from flipper.state import AnalysisState
 from flipper.tools.datasheet import write_rows
+from flipper.tools.excel import DEFAULT_SHEET, excel_to_notes
 from flipper.tools.units import validate_rows
 
 _saver: SqliteSaver | None = None
@@ -94,14 +97,49 @@ def parse_rows(text: str) -> list[dict]:
     return rows if isinstance(rows, list) else []
 
 
+def _load_notes(args: argparse.Namespace) -> str:
+    if args.notes:
+        return args.notes.read_text()
+    xlsx = args.excel or settings.dolphin_xlsx
+    if not xlsx:
+        raise SystemExit("--notes, --excel, or DOLPHIN_XLSX is required on first run")
+    limit = None if args.limit == 0 else args.limit
+    notes = excel_to_notes(xlsx, sheet=args.sheet, limit=limit)
+    print(f"Loaded Excel {xlsx} sheet={args.sheet!r} limit={limit}")
+    return notes
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Flipper analysis session: extract, validate, approve, write"
     )
     parser.add_argument("--notes", type=Path)
-    parser.add_argument("--thread", required=True)
+    parser.add_argument("--excel", type=Path, help="Dolphin .xlsx (Audio Data by default)")
+    parser.add_argument("--sheet", default=DEFAULT_SHEET)
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=20,
+        help="Max Excel rows to send to the model; 0 means all",
+    )
+    parser.add_argument("--thread", help="Required for --notes extract / --resume")
     parser.add_argument("--resume", choices=["approve", "reject"])
     args = parser.parse_args()
+
+    excel_mode = args.excel is not None or (
+        args.notes is None and settings.dolphin_xlsx is not None and not args.resume
+    )
+    if excel_mode and not args.resume:
+        notes = _load_notes(args)
+        result = complete(notes, system=SUMMARY_SYSTEM)
+        print(result.text)
+        print(f"({result.provider}:{result.model})")
+        return
+
+    if args.resume and not args.thread:
+        raise SystemExit("--thread is required with --resume")
+    if not args.thread:
+        raise SystemExit("--thread is required for notes extract")
 
     app = build_app()
     config = {"configurable": {"thread_id": args.thread}}
@@ -109,11 +147,9 @@ def main() -> None:
     if args.resume:
         result = app.invoke(Command(resume=args.resume), config)
     else:
-        if not args.notes:
-            raise SystemExit("--notes is required on first run")
         result = app.invoke(
             {
-                "notes": args.notes.read_text(),
+                "notes": _load_notes(args),
                 "draft_rows": [],
                 "valid_rows": [],
                 "rejected": [],
@@ -126,7 +162,15 @@ def main() -> None:
 
     snapshot = app.get_state(config)
     if snapshot.next:
+        values = snapshot.values or {}
         print("PAUSED at", snapshot.next)
+        print("model_used:", values.get("model_used"))
+        print("valid_rows:")
+        pprint.pp(values.get("valid_rows") or [])
+        rejected = values.get("rejected") or []
+        if rejected:
+            print("rejected:")
+            pprint.pp(rejected)
         print("Resume with: --thread", args.thread, "--resume approve")
         return
 
