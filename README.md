@@ -124,3 +124,39 @@ python -m flipper.graphs.analysis_session \
 Same `thread_id` reloads the sqlite checkpoint in `runs/`. The CSV in `data/processed/` records `model_used` so you know whether a row came from Grok or the OpenAI backup.
 
 Do not send WAV files to the model. Code measures; the model proposes labels and drafts text.
+
+## Summarize dolphin Excel
+
+Grok 4.6 summarizes the workbook. It does not extract measurement rows from Excel.
+
+```bash
+python -m flipper.graphs.analysis_session --limit 20
+```
+
+Uses `DOLPHIN_XLSX` from `.env`, sheet `Audio Data`. Pass `--excel path.xlsx` to override. `--limit 0` sends every row.
+
+## Video timestamps → burst pulses (`_Flipper` files)
+
+Local (no LLM) pipeline: read the Excel **Data** sheet, skip CLANG rows, parse
+touch/bridge clocks, cut **±3 s** windows on the matching session WAV, detect
+burst-pulse trains with Hilbert-envelope ICI grouping, and write Raven tables
+plus a metrics CSV. Original workbooks and WAVs are never modified. Output
+filenames always contain `Flipper` immediately before the extension
+(`Audio_Data_Flipper.csv`, `KOD_20250728_S1_Flipper.selections.txt`).
+
+ICI is **not** `duration/(n-1)`. Successive envelope peaks are grouped into a
+train while ICI ≤ 8 ms (default); a train needs ≥ 8 pulses and a mean ICI
+between 1.2 and 8 ms. SNR (dB) is written on each row. Pass `--min-snr 10` to drop weak detections into `Audio_Data_Flipper_rejected.csv`. Overlapping touch/bridge windows are de-duplicated
+(begin/end within 20 ms).
+
+```bash
+python -m flipper.extract_burst_pulses \
+  --excel "/Users/christiannadewind/Desktop/UCSD/projects/burst pulse/dolphin_data_template_v3.xlsx" \
+  --audio-dir "/Users/christiannadewind/Desktop/UCSD/projects/burst pulse" \
+  --out data/processed \
+  --dolphin KOD --date 2025-07-28 --limit 1
+```
+
+After `pip install -e .` you can also run `flipper-extract` with the same flags.
+WAV matching uses dolphin + date in names such as `OBJ_25-07-28_KOD_...wav`;
+unmatched or ambiguous trials are printed and skipped.

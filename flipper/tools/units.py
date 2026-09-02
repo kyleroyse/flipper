@@ -1,8 +1,10 @@
 """Deterministic unit and schema QC. No model in this file."""
 
 from typing import Any
-
-ALLOWED_UNITS = {"khz", "hz", "db", "db re 1 µpa", "s", "ms"}
+# Allowed units for audio processing and analysis
+ALLOWED_UNITS = {
+    "khz", "hz", "db", "db re 1 µpa", "db/hz", "s", "ms", "bits",
+}
 
 
 def validate_rows(rows: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[str]]:

@@ -11,6 +11,7 @@ dependencies = [
     "numpy>=2.5.0",
     "matplotlib>=3.11.0",
     "pandas>=3.0.0",
+    "openpyxl>=3.1.0",
     "scikit-learn>=1.9.0",
     "pydub>=0.25.1",
     "audioread>=3.1.0",
@@ -32,6 +33,7 @@ dependencies = [
 [project.scripts]
 flipper = "main:main"
 flipper-session = "flipper.graphs.analysis_session:main"
+flipper-extract = "flipper.extract_burst_pulses:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["flipper"]

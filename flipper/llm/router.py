@@ -14,16 +14,16 @@ _RETRYABLE = (
 )
 
 
-def complete(prompt: str) -> ChatResult:
+def complete(prompt: str, system: str | None = None) -> ChatResult:
     try:
-        result = grok.complete(prompt)
+        result = grok.complete(prompt, system=system)
         log.info("primary ok: %s", result.model)
         return result
     except Exception as exc:
         if not _is_retryable(exc):
             raise
         log.warning("Grok failed (%s); falling back to OpenAI", exc)
-        result = openai_backup.complete(prompt)
+        result = openai_backup.complete(prompt, system=system)
         log.info("backup ok: %s", result.model)
         return result
 
